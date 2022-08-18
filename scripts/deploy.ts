@@ -14,12 +14,28 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const Greeter = await ethers.getContractFactory('Greeter');
-  const greeter = await Greeter.deploy('Hello, Hardhat!');
+  const soulboundContract = await ethers.getContractFactory('GudSoulbound721');
+  const name = 'Test',
+    symbol = 'TST',
+    tiers = [
+      {
+        publicPrice: '10000000000',
+        maxOwnable: '5',
+      },
+      {
+        publicPrice: '10000000000',
+        maxOwnable: '3',
+      },
+      {
+        publicPrice: '10000000000',
+        maxOwnable: '2',
+      },
+    ];
+  const soulbound = await soulboundContract.deploy(name, symbol, tiers);
 
-  await greeter.deployed();
+  await soulbound.deployed();
 
-  console.log('Greeter deployed to:', greeter.address);
+  console.log('Soulbound NFT deployed to:', soulbound.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
@@ -28,3 +44,6 @@ main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });
+
+// 0xe84Fb7241D82a6fafC169835C739A97D0Cf68512 (Goerli)
+// npx hardhat verify --network goerli --constructor-args arguments.js 0xe84Fb7241D82a6fafC169835C739A97D0Cf68512
