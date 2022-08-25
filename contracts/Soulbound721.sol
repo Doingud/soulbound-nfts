@@ -88,7 +88,7 @@ contract Soulbound721 is Context, ERC165, IERC721, IERC721Metadata {
         _requireMinted(tokenId);
 
         string memory baseURI = _baseURI();
-        return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, tokenId.toString())) : "";
+        return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI)) : "";
     }
 
     /**
@@ -97,7 +97,7 @@ contract Soulbound721 is Context, ERC165, IERC721, IERC721Metadata {
      * by default, can be overridden in child contracts.
      */
     function _baseURI() internal view virtual returns (string memory) {
-        return "";
+        return "https://gud-souls.4everland.store/test_metadata.json";
     }
 
     /**

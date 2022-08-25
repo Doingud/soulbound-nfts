@@ -23,7 +23,7 @@ contract GudSoulbound721 is IGudSoulbound721, Soulbound721, Ownable {
     error IncorrectMerkleProof();
 
     Tier[] private _tiers;
-    mapping(uint256 => uint256) _numMinted;
+    mapping(uint256 => uint256) public _numMinted;
     mapping(address /*owner*/ => mapping(uint256 /*tier*/ => uint256 /*numOwned*/)) private _numOwned;
     bytes32 private _mintMerkleRoot;
 
@@ -46,9 +46,11 @@ contract GudSoulbound721 is IGudSoulbound721, Soulbound721, Ownable {
         MerkleMint calldata merkleMint,
         bytes32[] calldata merkleProof
     ) external payable {
-        if (MerkleProof.verify(merkleProof, _mintMerkleRoot, keccak256(abi.encode(merkleMint))) == false) {
-            revert IncorrectMerkleProof();
-        }
+        // if (MerkleProof.verify(merkleProof, _mintMerkleRoot, keccak256(abi.encode(merkleMint))) == false) {
+        //     revert IncorrectMerkleProof();
+        // }
+
+        require(MerkleProof.verify(merkleProof, _mintMerkleRoot, keccak256(abi.encode(merkleMint))), "IncorrectMerkleProof");
         _mint(to, numMints);
     }
 
