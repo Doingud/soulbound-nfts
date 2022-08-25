@@ -15,20 +15,24 @@ async function main() {
 
   // We get the contract to deploy
   const soulboundContract = await ethers.getContractFactory('GudSoulbound721');
-  const name = 'Test',
-    symbol = 'TST',
+  const name = 'GudSoulsv1',
+    symbol = 'GDS',
     tiers = [
       {
-        publicPrice: '10000000000',
+        publicPrice: '2000000000000',
         maxOwnable: '5',
       },
       {
-        publicPrice: '10000000000',
+        publicPrice: '3000000000000',
         maxOwnable: '3',
       },
       {
-        publicPrice: '10000000000',
+        publicPrice: '1000000000000',
         maxOwnable: '2',
+      },
+      {
+        publicPrice: '4000000000000',
+        maxOwnable: '7',
       },
     ];
   const soulbound = await soulboundContract.deploy(name, symbol, tiers);
@@ -46,4 +50,6 @@ main().catch((error) => {
 });
 
 // 0xe84Fb7241D82a6fafC169835C739A97D0Cf68512 (Goerli)
+// 0x3A22b0B805EbeCdd5a4A66352979A505fe1348D0 (Mumbai)
 // npx hardhat verify --network goerli --constructor-args arguments.js 0xe84Fb7241D82a6fafC169835C739A97D0Cf68512
+// 0x320d9D3356fdBC7F86b14d2F79E52576F7e9CbE3 (Rinkeby)

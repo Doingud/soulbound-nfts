@@ -1,16 +1,16 @@
 import { ethers } from 'hardhat';
 
 async function main() {
-  const contractAddress = '0xe84Fb7241D82a6fafC169835C739A97D0Cf68512';
+  const contractAddress = '0x320d9D3356fdBC7F86b14d2F79E52576F7e9CbE3';
   const soulbound = await ethers.getContractAt('GudSoulbound721', contractAddress);
 
   // console.log(soulbound)
 
   // public mint
   const to = '0x66Dc3BFCD29E24fDDeE7f405c705220E6142e4cD',
-    numMints = [0, 1, 2];
+    numMints = [0, 1, 2, 0];
 
-  const totalPrice = '30000000000';
+  const totalPrice = '30000000000000';
 
   // const tx = await soulbound.mint(to, numMints, { value: totalPrice });
   // await tx.wait();
