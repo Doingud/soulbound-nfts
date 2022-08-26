@@ -3,10 +3,12 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/interfaces/IERC721Metadata.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol";
 
 interface IGudSoulbound721 is IERC721, IERC721Metadata {
+    event MerkleMintUsed(MerkleMint merkleMint, uint256[] numMints);
+    event TokenBurned(uint256 tokenId);
+    event TiersSet(Tier[] tiers);
+    event EtherWithdrawn(address payable to, uint256 amount);
     event MintMerkleRootSet(bytes32 mintMerkleRoot);
 
     /**
@@ -15,10 +17,14 @@ interface IGudSoulbound721 is IERC721, IERC721Metadata {
      * @param publicPrice describes the publicly available minting price; a value of type(uint256).max means
      * public minting is unavailable for this tier
      * @param maxOwnable maximum tokens of this tier that can be owned by any one address
+     * @param maxSupply maximum tokens of this tier than can be minted
+     * @param uri URI for this tier
     */
     struct Tier {
         uint256 publicPrice;
-        uint256 maxOwnable;
+        uint256 maxSupply;
+        string uri;
+        uint248 maxOwnable;
     }
 
     /**
@@ -26,13 +32,15 @@ interface IGudSoulbound721 is IERC721, IERC721Metadata {
      *
      * @param token recipient address
      * @param tierMaxMints number of times this offer can be used for each tier
-     * @param price of this offer for each tier
+     * @param tierPrices price of this offer for each tier
     */
     struct MerkleMint {
         address to;
         uint256[] tierMaxMints;
         uint256[] tierPrices;
     }
+
+    function initialize(string memory name, string memory symbol, Tier[] memory tiers) external;
 
     /**
      * @dev public minting function
@@ -45,13 +53,11 @@ interface IGudSoulbound721 is IERC721, IERC721Metadata {
     /**
     * @dev private minting function
     *
-    * @param to token recipient address
     * @param numMints number of tokens of each tier to mint
     * @param merkleMint the relevant MerkleMint leaf of the mintMerkle tree
     * @param merkleProof Merkle proof for the leaf
     */
     function mint(
-        address to,
         uint256[] calldata numMints,
         MerkleMint calldata merkleMint,
         bytes32[] calldata merkleProof
@@ -85,4 +91,9 @@ interface IGudSoulbound721 is IERC721, IERC721Metadata {
      * @return Tier description of each tier
     */
     function getTiers() external view returns (Tier[] memory);
+
+    /**
+    * @return number of tokens minted in `tier`
+    */
+    function numMinted(uint256 tier) external view returns (uint256);
 }
