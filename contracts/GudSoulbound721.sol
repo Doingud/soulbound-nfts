@@ -2,15 +2,14 @@
 
 pragma solidity 0.8.16;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/utils/Base64.sol";
 import "./IGudSoulbound721.sol";
-import "./Soulbound721.sol";
+import "./Soulbound721Upgradable.sol";
+import "./OwnableUpgradable.sol";
 
-contract GudSoulbound721 is IGudSoulbound721, Soulbound721, Ownable {
-    using Address for address payable;
+contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpgradable {
     using ECDSA for bytes32;
 
     error InvalidNumTiers();
@@ -18,40 +17,65 @@ contract GudSoulbound721 is IGudSoulbound721, Soulbound721, Ownable {
     error InsufficientValue();
     error PublicMintingDisabled(uint256 tier);
     error ExceedsMaxOwnership(uint256 tier);
+    error ExceedsMaxMerkleMintUses(uint256 tier);
+    error ExceedsMaxSupply(uint256 tier);
     error NotOwner();
     error IncorrectOwnerSignature();
     error IncorrectMerkleProof();
+    error WithdrawFailed();
+    error NotContractOwner();
+    error NoSuchToken(uint256 tokenId);
 
     Tier[] private _tiers;
-    mapping(uint256 => uint256) public _numMinted;
+    mapping(uint256 => uint256) _numMinted;
     mapping(address /*owner*/ => mapping(uint256 /*tier*/ => uint256 /*numOwned*/)) private _numOwned;
     bytes32 private _mintMerkleRoot;
+    bytes32 private _numMerkleRoots;
+    mapping(address /*owner*/ => mapping(uint256 /*tier*/ => uint256 /*numOwned*/))[] private _merkleMintUses;
 
-    constructor(string memory name, string memory symbol, Tier[] memory tiers) Soulbound721(name, symbol) {
+    function initialize(string memory name, string memory symbol, Tier[] memory tiers) external override {
+        OwnableUpgradable.initialize();
+        Soulbound721Upgradable.initialize(name, symbol);
         setTiers(tiers);
     }
 
     function mint(address to, uint256[] calldata numMints) external payable {
+        uint256 totalPrice = 0;
         for (uint i = 0; i < numMints.length; ++i) {
             if (numMints[i] != 0 && _tiers[i].publicPrice == type(uint256).max) {
                 revert PublicMintingDisabled(i);
             }
+            totalPrice += _tiers[i].publicPrice * numMints[i];
         }
-        _mint(to, numMints);
+        _mint(to, numMints, totalPrice);
     }
 
     function mint(
-        address to,
         uint256[] calldata numMints,
         MerkleMint calldata merkleMint,
         bytes32[] calldata merkleProof
     ) external payable {
-        // if (MerkleProof.verify(merkleProof, _mintMerkleRoot, keccak256(abi.encode(merkleMint))) == false) {
-        //     revert IncorrectMerkleProof();
-        // }
+        if (MerkleProof.verify(
+            merkleProof,
+            _mintMerkleRoot,
+            keccak256(abi.encode(merkleMint.to, merkleMint.tierMaxMints,merkleMint.tierPrices))
+        ) == false) {
+            revert IncorrectMerkleProof();
+        }
+        mapping(uint256 => uint256) storage merkleMintUses = _merkleMintUses[_merkleMintUses.length - 1][merkleMint.to];
+        uint256 totalPrice = 0;
 
-        require(MerkleProof.verify(merkleProof, _mintMerkleRoot, keccak256(abi.encode(merkleMint))), "IncorrectMerkleProof");
-        _mint(to, numMints);
+        for (uint i = 0; i < numMints.length; ++i) {
+            if (merkleMintUses[i] + numMints[i] > merkleMint.tierMaxMints[i]) {
+                revert ExceedsMaxMerkleMintUses(i);
+            }
+            merkleMintUses[i] += numMints[i];
+
+            totalPrice += merkleMint.tierPrices[i] * numMints[i];
+        }
+        _mint(merkleMint.to, numMints, totalPrice);
+
+        emit MerkleMintUsed(merkleMint, numMints);
     }
 
     function burn(uint256 tokenId) external {
@@ -59,6 +83,7 @@ contract GudSoulbound721 is IGudSoulbound721, Soulbound721, Ownable {
             revert NotOwner();
         }
         _burn(tokenId);
+        emit TokenBurned(tokenId);
     }
 
     function setTiers(Tier[] memory tiers) public onlyOwner {
@@ -74,42 +99,62 @@ contract GudSoulbound721 is IGudSoulbound721, Soulbound721, Ownable {
             }
             _tiers.push(tiers[i]);
         }
+
+        emit TiersSet(tiers);
     }
 
     function withdrawEther(address payable to, uint256 amount) external onlyOwner {
-        to.sendValue(amount);
+        (bool success, ) = to.call{value: amount}("");
+        if (success == false) {
+            revert WithdrawFailed();
+        }
+        emit EtherWithdrawn(to, amount);
     }
 
     function setMintMerkleRoot(bytes32 mintMerkleRoot) external onlyOwner {
         _mintMerkleRoot = mintMerkleRoot;
+        _merkleMintUses.push();
+        emit MintMerkleRootSet(mintMerkleRoot);
     }
 
     function getTiers() external view returns (Tier[] memory) {
         return _tiers;
     }
 
+    function numMinted(uint256 tier) external view returns (uint256) {
+        return _numMinted[tier];
+    }
+
+    function tokenURI(uint256 tokenId) public view virtual override(Soulbound721Upgradable, IERC721Metadata) returns (string memory) {
+        if (ownerOf(tokenId) == address(0)) {
+            revert NoSuchToken(tokenId);
+        }
+        return _tiers[tokenId >> 248].uri;
+    }
+
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId) public view override(Soulbound721, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view override(Soulbound721Upgradable, IERC165) returns (bool) {
             return interfaceId == type(IGudSoulbound721).interfaceId || super.supportsInterface(interfaceId);
     }
 
-    function _mint(address to, uint256[] calldata numMints) private {
-        uint256 totalPrice = 0;
-
+    function _mint(address to, uint256[] calldata numMints, uint256 totalPrice) private {
         for (uint tierNum = 0; tierNum < numMints.length; ++tierNum) {
             Tier storage tier = _tiers[tierNum];
 
             if (_numOwned[to][tierNum] + numMints[tierNum] > tier.maxOwnable) {
                 revert ExceedsMaxOwnership(tierNum);
             }
+            if (_numMinted[tierNum] + numMints[tierNum] > tier.maxSupply) {
+                revert ExceedsMaxSupply(tierNum);
+            }
 
-            totalPrice += tier.publicPrice * numMints[tierNum];
+//            totalPrice += tier.publicPrice * numMints[tierNum];
 
-            uint256 tokenId = (tierNum << 248) + _numMinted[tierNum] + 1;
+            uint256 tokenId = (tierNum << 248) + _numMinted[tierNum];
             for (uint j = 0; j < numMints[tierNum]; ++j) {
-                _safeMint(to, tokenId++);
+                _safeMint(to, ++tokenId);
             }
             _numMinted[tierNum] += numMints[tierNum];
         }

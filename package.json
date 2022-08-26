@@ -28,7 +28,6 @@
     "hardhat": "^2.9.9",
     "hardhat-gas-reporter": "^1.0.4",
     "keccak256": "^1.0.6",
-    "merkletreejs": "^0.2.32",
     "prettier": "2.7.1",
     "prettier-plugin-solidity": "^1.0.0-beta.13",
     "solhint": "^3.3.6",
@@ -40,5 +39,8 @@
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test"
+  },
+  "dependencies": {
+    "merkletreejs": "^0.2.32"
   }
 }

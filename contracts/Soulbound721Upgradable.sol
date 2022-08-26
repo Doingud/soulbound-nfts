@@ -6,7 +6,6 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
@@ -16,8 +15,7 @@ import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
  * the Metadata extension, but not including the Enumerable extension, which is available separately as
  * {ERC721Enumerable}.
  */
-contract Soulbound721 is Context, ERC165, IERC721, IERC721Metadata {
-    using Address for address;
+contract Soulbound721Upgradable is Context, ERC165, IERC721, IERC721Metadata {
     using Strings for uint256;
 
     // Token name
@@ -32,10 +30,15 @@ contract Soulbound721 is Context, ERC165, IERC721, IERC721Metadata {
     // Mapping owner address to token count
     mapping(address => uint256) private _balances;
 
-    /**
-     * @dev Initializes the contract by setting a `name` and a `symbol` to the token collection.
-     */
-    constructor(string memory name_, string memory symbol_) {
+//    /**
+//     * @dev Initializes the contract by setting a `name` and a `symbol` to the token collection.
+//     */
+//    constructor(string memory name_, string memory symbol_) {
+//        _name = name_;
+//        _symbol = symbol_;
+//    }
+
+    function initialize(string memory name_, string memory symbol_) internal {
         _name = name_;
         _symbol = symbol_;
     }
@@ -103,28 +106,28 @@ contract Soulbound721 is Context, ERC165, IERC721, IERC721Metadata {
     /**
      * @dev See {IERC721-approve}.
      */
-    function approve(address to, uint256 tokenId) public pure override {
+    function approve(address /*to*/, uint256 /*tokenId*/) public pure override {
         revert("Transfers are not allowed");
     }
 
     /**
      * @dev See {IERC721-getApproved}.
      */
-    function getApproved(uint256 tokenId) public pure override returns (address) {
+    function getApproved(uint256 /*tokenId*/) public pure override returns (address) {
         return address(0);
     }
 
     /**
      * @dev See {IERC721-setApprovalForAll}.
      */
-    function setApprovalForAll(address operator, bool approved) public pure override {
+    function setApprovalForAll(address /*operator*/, bool /*approved*/) public pure override {
         revert("Transfers are not allowed");
     }
 
     /**
      * @dev See {IERC721-isApprovedForAll}.
      */
-    function isApprovedForAll(address owner, address operator) public pure override returns (bool) {
+    function isApprovedForAll(address /*owner*/, address /*operator*/) public pure override returns (bool) {
         return false;
     }
 
@@ -132,9 +135,9 @@ contract Soulbound721 is Context, ERC165, IERC721, IERC721Metadata {
      * @dev See {IERC721-transferFrom}.
      */
     function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
+        address /*from*/,
+        address /*to*/,
+        uint256 /*tokenId*/
     ) public pure override {
         revert("Transfers are not allowed");
     }
@@ -143,9 +146,9 @@ contract Soulbound721 is Context, ERC165, IERC721, IERC721Metadata {
      * @dev See {IERC721-safeTransferFrom}.
      */
     function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId
+        address /*from*/,
+        address /*to*/,
+        uint256 /*tokenId*/
     ) public pure override {
         revert("Transfers are not allowed");
     }
@@ -154,10 +157,10 @@ contract Soulbound721 is Context, ERC165, IERC721, IERC721Metadata {
      * @dev See {IERC721-safeTransferFrom}.
      */
     function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes memory data
+        address /*from*/,
+        address /*to*/,
+        uint256 /*tokenId*/,
+        bytes memory /*data*/
     ) public pure override {
         revert("Transfers are not allowed");
     }
@@ -241,7 +244,7 @@ contract Soulbound721 is Context, ERC165, IERC721, IERC721Metadata {
      * Emits a {Transfer} event.
      */
     function _burn(uint256 tokenId) internal virtual {
-        address owner = Soulbound721.ownerOf(tokenId);
+        address owner = Soulbound721Upgradable.ownerOf(tokenId);
 
         _beforeTokenTransfer(owner, address(0), tokenId);
 
@@ -270,13 +273,14 @@ contract Soulbound721 is Context, ERC165, IERC721, IERC721Metadata {
      * @param data bytes optional data to send along with the call
      * @return bool whether the call correctly returned the expected magic value
      */
+    //noinspection NoReturn
     function _checkOnERC721Received(
         address from,
         address to,
         uint256 tokenId,
         bytes memory data
     ) private returns (bool) {
-        if (to.isContract()) {
+        if (to.code.length > 0) {
             try IERC721Receiver(to).onERC721Received(_msgSender(), from, tokenId, data) returns (bytes4 retval) {
                 return retval == IERC721Receiver.onERC721Received.selector;
             } catch (bytes memory reason) {
