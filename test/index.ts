@@ -22,7 +22,7 @@ describe('Test', function() {
     tiers = [
       {
         publicPrice: ethers.constants.MaxUint256,
-        maxOwnable: BigNumber.from(4),
+        maxOwnable: BigNumber.from(2),
         maxSupply: BigNumber.from(1000),
         uri: 'ipfs://1234',
       },
@@ -177,27 +177,33 @@ describe('Test', function() {
     const newBalance = await ethers.provider.getBalance(soulBoundContract.address);
     expect(newBalance.sub(balance)).equal(2 * tiers[1].publicPrice.toNumber());
 
+    await soulBoundContract['mint(address,uint256[])'](
+      accounts[4].address,
+      [tiers[0].maxOwnable],
+      { value: tiers[0].maxOwnable.mul(tiers[0].publicPrice) }
+    );
     await expect(soulBoundContract['mint(address,uint256[])'](
       accounts[4].address,
-      [tiers[0].maxOwnable.add(1)]
+      [1],
+      { value: tiers[0].publicPrice }
     )).revertedWith('ExceedsMaxOwnership(0)');
   });
 
   it('Test burning', async () => {
     await soulBoundContract['mint(address,uint256[])'](
-      accounts[4].address,
+      accounts[5].address,
       [2],
       { value: tiers[0].publicPrice.toNumber() * 2 }
     );
     const secondToken = await soulBoundContract.numMinted(0);
-    expect(await soulBoundContract.ownerOf(secondToken.sub(1))).equal(accounts[4].address);
-    expect(await soulBoundContract.ownerOf(secondToken)).equal(accounts[4].address);
+    expect(await soulBoundContract.ownerOf(secondToken.sub(1))).equal(accounts[5].address);
+    expect(await soulBoundContract.ownerOf(secondToken)).equal(accounts[5].address);
 
-    await soulBoundContract.connect(accounts[4]).burn(secondToken.sub(1));
+    await soulBoundContract.connect(accounts[5]).burn(secondToken.sub(1));
     await expect(
       soulBoundContract.ownerOf(secondToken.sub(1))
     ).revertedWith('ERC721: invalid token ID" [ See: https://links.ethers.org/v5-errors-CALL_EXCEPTION ] (method="ownerOf(uint256)');
-    expect(await soulBoundContract.ownerOf(secondToken)).equal(accounts[4].address);
+    expect(await soulBoundContract.ownerOf(secondToken)).equal(accounts[5].address);
   });
 
   it('Test withdrawing ether', async () => {
