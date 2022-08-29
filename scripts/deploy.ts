@@ -3,7 +3,7 @@
 //
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
-import { ethers } from 'hardhat';
+import { ethers, upgrades } from 'hardhat';
 
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
@@ -14,12 +14,43 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const Greeter = await ethers.getContractFactory('Greeter');
-  const greeter = await Greeter.deploy('Hello, Hardhat!');
+  const soulboundContract = await ethers.getContractFactory('GudSoulbound721');
+  const name = 'GudSoulsv1';
+    const symbol = 'GDS';
+    const tiers = [
+      {
+        publicPrice: 2000000000000,
+        maxOwnable: 5,
+        maxSupply: 1000,
+        uri: 'ipfs://1234',
+      },
+      {
+        publicPrice: 3000000000000,
+        maxOwnable: 3,
+        maxSupply: 1000,
+        uri: 'ipfs://1234',
+      },
+      {
+        publicPrice: 1000000000000,
+        maxOwnable: 2,
+        maxSupply: 1000,
+        uri: 'ipfs://1234',
+      },
+      {
+        publicPrice: 4000000000000,
+        maxOwnable: 7,
+        maxSupply: 1000,
+        uri: 'ipfs://1234',
+      },
+    ];
+  const soulbound = await upgrades.deployProxy(
+    soulboundContract,
+    [name, symbol, tiers],
+  );
 
-  await greeter.deployed();
+  await soulbound.deployed();
 
-  console.log('Greeter deployed to:', greeter.address);
+  console.log('Soulbound NFT deployed to:', soulbound.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
@@ -28,3 +59,8 @@ main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });
+
+// 0xe84Fb7241D82a6fafC169835C739A97D0Cf68512 (Goerli)
+// 0x3A22b0B805EbeCdd5a4A66352979A505fe1348D0 (Mumbai)
+// npx hardhat verify --network goerli --constructor-args arguments.js 0xe84Fb7241D82a6fafC169835C739A97D0Cf68512
+// 0x320d9D3356fdBC7F86b14d2F79E52576F7e9CbE3 (Rinkeby)
