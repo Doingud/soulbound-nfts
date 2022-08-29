@@ -5,6 +5,7 @@ coverage.json
 typechain
 .idea
 
+.openzeppelin
 #Hardhat files
 cache
 artifacts

@@ -72,7 +72,7 @@ console.log(
   merkleTree.verify(hexProof, claimingAddress, rootHash)
 );
 
-const contractAddress = "0x002aF40A6eB3C688612184C51500b97C1b89dfFC"; // with require msg
+const contractAddress = "0xe0fEaB345D3CdE63e58542Ce32CC1E85D3fD5269"; // with require msg
 // '0x7Cb07737ddd71f0481B9E251b0593cA0bDCc2c64'; // Goerli (txn failed for merkle mint)
 // rinkeby -> '0x320d9D3356fdBC7F86b14d2F79E52576F7e9CbE3'; (txn stuck)
 
@@ -103,8 +103,7 @@ const setMintMerkleRoot = async () => {
   //   "0xd82345afce177fbd70593815c1766d38cb5c0c9f9c44180395cc1cb3284379df",
   // ];
   console.log("merkle proof to pass to contract: ", merkleProof);
-  const tx = await soulbound["mint(address,uint256[],(address,uint256[],uint256[]),bytes32[])"](
-    to,
+  const tx = await soulbound["mint(uint256[],(address,uint256[],uint256[]),bytes32[])"](
     numMints,
     merkleMint,
     merkleProof,
