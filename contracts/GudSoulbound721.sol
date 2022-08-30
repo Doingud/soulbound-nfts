@@ -150,12 +150,11 @@ contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpg
                 revert ExceedsMaxSupply(tierNum);
             }
 
-//            totalPrice += tier.publicPrice * numMints[tierNum];
-
             uint256 tokenId = (tierNum << 248) + _numMinted[tierNum];
             for (uint j = 0; j < numMints[tierNum]; ++j) {
                 _safeMint(to, ++tokenId);
             }
+            _numOwned[to][tierNum] += numMints[tierNum];
             _numMinted[tierNum] += numMints[tierNum];
         }
 
