@@ -41,6 +41,7 @@
     "test": "hardhat test"
   },
   "dependencies": {
+    "axios": "^0.27.2",
     "merkletreejs": "^0.2.32"
   }
 }

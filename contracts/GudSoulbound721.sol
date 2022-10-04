@@ -125,6 +125,10 @@ contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpg
         return _numMinted[tier];
     }
 
+    function numOwned(address account, uint256 tier) external view returns (uint256) {
+        return _numOwned[account][tier];
+    }
+
     function tokenURI(uint256 tokenId) public view virtual override(Soulbound721Upgradable, IERC721Metadata) returns (string memory) {
         if (ownerOf(tokenId) == address(0)) {
             revert NoSuchToken(tokenId);

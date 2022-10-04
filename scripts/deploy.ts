@@ -3,6 +3,7 @@
 //
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
+import { parseEther } from "ethers/lib/utils";
 import { ethers, upgrades } from "hardhat";
 
 async function main() {
@@ -16,32 +17,32 @@ async function main() {
   // We get the contract to deploy
   const gas = ethers.provider.getGasPrice();
   const soulboundContract = await ethers.getContractFactory("GudSoulbound721");
-  const name = "GudSoulsv1",
+  const name = "GudSoulsv2",
     symbol = "GDS",
     tiers = [
       {
-        publicPrice: "2000000000000",
-        maxSupply: "111",
-        uri: "https://ipfs.io/ipfs",
-        maxOwnable: "5",
-      },
-      {
-        publicPrice: "3000000000000",
-        maxSupply: "111",
-        uri: "https://ipfs.io/ipfs",
+        publicPrice: parseEther("0.004"),
+        maxSupply: "500",
+        uri: "https://gateway.pinata.cloud/ipfs/QmavYWUp68dv5gqjrb5ueSp4BHgdsVHFKkZuDkyEMrQa7s",
         maxOwnable: "3",
       },
       {
-        publicPrice: "1000000000000",
-        maxSupply: "111",
-        uri: "https://ipfs.io/ipfs",
-        maxOwnable: "2",
+        publicPrice: parseEther("0.004"),
+        maxSupply: "500",
+        uri: "https://gateway.pinata.cloud/ipfs/QmQz8Jh4EPceVb1uarUNCYv7WxR9Zw1eaATjDkF1wwaJJN",
+        maxOwnable: "3",
       },
       {
-        publicPrice: "4000000000000",
-        maxSupply: "111",
-        uri: "https://ipfs.io/ipfs",
-        maxOwnable: "7",
+        publicPrice: parseEther("0.004"),
+        maxSupply: "500",
+        uri: "https://gateway.pinata.cloud/ipfs/QmY8BaEx8xAiaHft6x8SHqHL4cYw2dKYWN22kpSX7oVDbc",
+        maxOwnable: "3",
+      },
+      {
+        publicPrice: parseEther("0.004"),
+        maxSupply: "500",
+        uri: "https://gateway.pinata.cloud/ipfs/QmZV53QZMAuyomT41LMPz5cWjpUn65VYtCtSER9chfVXmk",
+        maxOwnable: "3",
       },
     ];
   // const soulbound = await soulboundContract.deploy(name, symbol, tiers);
@@ -59,8 +60,7 @@ main().catch((error) => {
   process.exitCode = 1;
 });
 
-// 0xe0fEaB345D3CdE63e58542Ce32CC1E85D3fD5269 (Proxy on Goerli)
-// 0xe84Fb7241D82a6fafC169835C739A97D0Cf68512 (Goerli)
-// 0x3A22b0B805EbeCdd5a4A66352979A505fe1348D0 (Mumbai)
-// npx hardhat verify --network goerli --constructor-args arguments.js 0xe84Fb7241D82a6fafC169835C739A97D0Cf68512
-// 0x320d9D3356fdBC7F86b14d2F79E52576F7e9CbE3 (Rinkeby)
+// console.log(parseEther("0.004").toString());
+// console.log(parseEther("0.0004").toString());
+
+// [400000000000000, 300000000000000, 200000000000000, 100000000000000];

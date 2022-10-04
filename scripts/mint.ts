@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 
 async function main() {
-  const contractAddress = "0xe0fEaB345D3CdE63e58542Ce32CC1E85D3fD5269"; // '0x320d9D3356fdBC7F86b14d2F79E52576F7e9CbE3';
+  const contractAddress = "0xA9297249eB33aE1E3A3925C6d118e917e5E47Eef"; // '0x320d9D3356fdBC7F86b14d2F79E52576F7e9CbE3';
   const soulbound = await ethers.getContractAt("GudSoulbound721", contractAddress);
 
   // console.log(soulbound)
