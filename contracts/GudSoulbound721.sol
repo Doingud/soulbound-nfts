@@ -121,7 +121,13 @@ contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpg
         return _numMinted[tier];
     }
 
-    function tokenURI(uint256 tokenId) public view virtual override(Soulbound721Upgradable, IERC721MetadataUpgradeable) returns (string memory) {
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        virtual
+        override(Soulbound721Upgradable, IERC721MetadataUpgradeable)
+        returns (string memory)
+    {
         if (ownerOf(tokenId) == address(0)) {
             revert NoSuchToken(tokenId);
         }
@@ -131,7 +137,12 @@ contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpg
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId) public view override(Soulbound721Upgradable, IERC165Upgradeable) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(Soulbound721Upgradable, IERC165Upgradeable)
+        returns (bool)
+    {
             return interfaceId == type(IGudSoulbound721).interfaceId || super.supportsInterface(interfaceId);
     }
 
