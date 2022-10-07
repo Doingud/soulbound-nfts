@@ -2,14 +2,16 @@
 
 pragma solidity 0.8.16;
 
-import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/MerkleProofUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./IGudSoulbound721.sol";
 import "./Soulbound721Upgradable.sol";
-import "./OwnableUpgradable.sol";
 
-contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpgradable {
-    using ECDSA for bytes32;
+import "hardhat/console.sol";
+
+contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpgradeable {
+    using ECDSAUpgradeable for bytes32;
 
     error InvalidNumTiers();
     error InsufficientValue();
@@ -30,9 +32,9 @@ contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpg
     bytes32 private _numMerkleRoots;
     mapping(address /*owner*/ => mapping(uint256 /*tier*/ => uint256 /*numOwned*/))[] private _merkleMintUses;
 
-    function initialize(string memory name, string memory symbol, Tier[] memory tiers) external override {
-        OwnableUpgradable.initialize();
-        Soulbound721Upgradable.initialize(name, symbol);
+    function initialize(string memory name, string memory symbol, Tier[] memory tiers) external initializer {
+        OwnableUpgradeable.__Ownable_init();
+        Soulbound721Upgradable.__ERC721_init(name, symbol);
         setTiers(tiers);
     }
 
@@ -52,7 +54,7 @@ contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpg
         MerkleMint calldata merkleMint,
         bytes32[] calldata merkleProof
     ) external payable {
-        if (MerkleProof.verify(
+        if (MerkleProofUpgradeable.verify(
             merkleProof,
             _mintMerkleRoot,
             keccak256(abi.encode(merkleMint.to, merkleMint.tierMaxMints,merkleMint.tierPrices))
@@ -119,7 +121,7 @@ contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpg
         return _numMinted[tier];
     }
 
-    function tokenURI(uint256 tokenId) public view virtual override(Soulbound721Upgradable, IERC721Metadata) returns (string memory) {
+    function tokenURI(uint256 tokenId) public view virtual override(Soulbound721Upgradable, IERC721MetadataUpgradeable) returns (string memory) {
         if (ownerOf(tokenId) == address(0)) {
             revert NoSuchToken(tokenId);
         }
@@ -129,7 +131,7 @@ contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpg
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId) public view override(Soulbound721Upgradable, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view override(Soulbound721Upgradable, IERC165Upgradeable) returns (bool) {
             return interfaceId == type(IGudSoulbound721).interfaceId || super.supportsInterface(interfaceId);
     }
 

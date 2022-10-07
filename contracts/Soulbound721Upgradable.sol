@@ -1,22 +1,25 @@
 // SPDX-License-Identifier: MIT
-// Based off of: OpenZeppelin Contracts (last updated v4.7.0) (token/ERC721/ERC721.sol)
+// Based on: OpenZeppelin Contracts (last updated v4.7.0) (token/ERC721/ERC721.sol)
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
-import "@openzeppelin/contracts/utils/Context.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/IERC721MetadataUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
  * @dev Implementation of https://eips.ethereum.org/EIPS/eip-721[ERC721] Non-Fungible Token Standard, including
  * the Metadata extension, but not including the Enumerable extension, which is available separately as
  * {ERC721Enumerable}.
  */
-contract Soulbound721Upgradable is Context, ERC165, IERC721, IERC721Metadata {
-    using Strings for uint256;
+contract Soulbound721Upgradable is Initializable, ContextUpgradeable, ERC165Upgradeable, IERC721Upgradeable, IERC721MetadataUpgradeable {
+    using AddressUpgradeable for address;
+    using StringsUpgradeable for uint256;
 
     // Token name
     string private _name;
@@ -30,15 +33,14 @@ contract Soulbound721Upgradable is Context, ERC165, IERC721, IERC721Metadata {
     // Mapping owner address to token count
     mapping(address => uint256) private _balances;
 
-//    /**
-//     * @dev Initializes the contract by setting a `name` and a `symbol` to the token collection.
-//     */
-//    constructor(string memory name_, string memory symbol_) {
-//        _name = name_;
-//        _symbol = symbol_;
-//    }
+    /**
+     * @dev Initializes the contract by setting a `name` and a `symbol` to the token collection.
+     */
+    function __ERC721_init(string memory name_, string memory symbol_) internal onlyInitializing {
+        __ERC721_init_unchained(name_, symbol_);
+    }
 
-    function initialize(string memory name_, string memory symbol_) internal {
+    function __ERC721_init_unchained(string memory name_, string memory symbol_) internal onlyInitializing {
         _name = name_;
         _symbol = symbol_;
     }
@@ -46,10 +48,12 @@ contract Soulbound721Upgradable is Context, ERC165, IERC721, IERC721Metadata {
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC165Upgradeable, IERC165Upgradeable) returns (bool) {
         return
-            interfaceId == type(IERC721).interfaceId ||
-            interfaceId == type(IERC721Metadata).interfaceId ||
+            interfaceId == type(IERC721Upgradeable).interfaceId ||
+            interfaceId == type(IERC721MetadataUpgradeable).interfaceId ||
             super.supportsInterface(interfaceId);
     }
 
@@ -273,16 +277,15 @@ contract Soulbound721Upgradable is Context, ERC165, IERC721, IERC721Metadata {
      * @param data bytes optional data to send along with the call
      * @return bool whether the call correctly returned the expected magic value
      */
-    //noinspection NoReturn
     function _checkOnERC721Received(
         address from,
         address to,
         uint256 tokenId,
         bytes memory data
     ) private returns (bool) {
-        if (to.code.length > 0) {
-            try IERC721Receiver(to).onERC721Received(_msgSender(), from, tokenId, data) returns (bytes4 retval) {
-                return retval == IERC721Receiver.onERC721Received.selector;
+        if (to.isContract()) {
+            try IERC721ReceiverUpgradeable(to).onERC721Received(_msgSender(), from, tokenId, data) returns (bytes4 retval) {
+                return retval == IERC721ReceiverUpgradeable.onERC721Received.selector;
             } catch (bytes memory reason) {
                 if (reason.length == 0) {
                     revert("ERC721: transfer to non ERC721Receiver implementer");
@@ -334,4 +337,11 @@ contract Soulbound721Upgradable is Context, ERC165, IERC721, IERC721Metadata {
         address to,
         uint256 tokenId
     ) internal virtual {}
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[44] private __gap;
 }
