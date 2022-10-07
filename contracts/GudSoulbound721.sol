@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.16;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/MerkleProofUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./IGudSoulbound721.sol";
 import "./Soulbound721Upgradable.sol";
-
-import "hardhat/console.sol";
 
 contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpgradeable {
     using ECDSAUpgradeable for bytes32;
