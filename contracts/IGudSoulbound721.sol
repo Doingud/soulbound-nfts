@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/interfaces/IERC721Metadata.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/IERC721MetadataUpgradeable.sol";
 
-interface IGudSoulbound721 is IERC721, IERC721Metadata {
+interface IGudSoulbound721 is IERC721MetadataUpgradeable {
     event MerkleMintUsed(MerkleMint merkleMint, uint256[] numMints);
     event TokenBurned(uint256 tokenId);
     event TiersSet(Tier[] tiers);
