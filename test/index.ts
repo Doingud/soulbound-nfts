@@ -69,7 +69,7 @@ describe('Test', function() {
       { to: accounts[2].address, tierMaxMints: [1, 2], tierPrices: tierPrices2 },
     ];
     const leaves: Buffer[] = mints.map(mint => keccak256(ethers.utils.defaultAbiCoder.encode(
-      ['address', 'uint256[]', 'uint256[]'],
+      ['address', 'uint248[]', 'uint256[]'],
       [mint.to, mint.tierMaxMints, mint.tierPrices],
     )));
     const merkleTree = new MerkleTree(leaves, keccak256, { sort: true });
@@ -79,20 +79,20 @@ describe('Test', function() {
     let balance: BigNumber;
     let newBalance;
 
-    await expect(soulboundContract['mint(uint256[],(address,uint256[],uint256[]),bytes32[])'](
+    await expect(soulboundContract['mint(uint248[],(address,uint248[],uint256[]),bytes32[])'](
       [mints[0].tierMaxMints[0] + 1, 1],
       mints[0],
       merkleTree.getHexProof(leaves[0]),
     )).revertedWith('ExceedsMaxMerkleMintUses(0)');
 
     balance = await ethers.provider.getBalance(soulboundContract.address);
-    await soulboundContract['mint(uint256[],(address,uint256[],uint256[]),bytes32[])'](
+    await soulboundContract['mint(uint248[],(address,uint248[],uint256[]),bytes32[])'](
       [2, 1],
       mints[0],
       merkleTree.getHexProof(leaves[0]),
       { value: 2 * tierPrices1[0] + tierPrices1[1] },
     );
-    await expect(soulboundContract['mint(uint256[],(address,uint256[],uint256[]),bytes32[])'](
+    await expect(soulboundContract['mint(uint248[],(address,uint248[],uint256[]),bytes32[])'](
       [2, 1],
       mints[0],
       merkleTree.getHexProof(leaves[0]),
@@ -111,26 +111,26 @@ describe('Test', function() {
     expect(newBalance.sub(balance)).equal(2 * tierPrices1[0] + tierPrices1[1]);
     balance = newBalance;
 
-    await soulboundContract['mint(uint256[],(address,uint256[],uint256[]),bytes32[])'](
+    await soulboundContract['mint(uint248[],(address,uint248[],uint256[]),bytes32[])'](
       [0, 1],
       mints[1],
       merkleTree.getHexProof(leaves[1]),
       { value: tierPrices2[1] },
     );
-    await soulboundContract['mint(uint256[],(address,uint256[],uint256[]),bytes32[])'](
+    await soulboundContract['mint(uint248[],(address,uint248[],uint256[]),bytes32[])'](
       [0, 1],
       mints[1],
       merkleTree.getHexProof(leaves[1]),
       { value: tierPrices2[1] },
     );
-    await expect(soulboundContract['mint(uint256[],(address,uint256[],uint256[]),bytes32[])'](
+    await expect(soulboundContract['mint(uint248[],(address,uint248[],uint256[]),bytes32[])'](
       [0, 1],
       mints[1],
       merkleTree.getHexProof(leaves[1]),
       { value: tierPrices2[1] },
     )).revertedWith('ExceedsMaxMerkleMintUses(1)');
 
-    await expect(soulboundContract['mint(uint256[],(address,uint256[],uint256[]),bytes32[])'](
+    await expect(soulboundContract['mint(uint248[],(address,uint248[],uint256[]),bytes32[])'](
       [1, 0],
       mints[1],
       merkleTree.getHexProof(leaves[1]),
@@ -147,7 +147,7 @@ describe('Test', function() {
   });
 
   it('Test public minting', async () => {
-    await expect(soulboundContract['mint(address,uint256[])'](
+    await expect(soulboundContract['mint(address,uint248[])'](
       accounts[3].address,
       [1],
     )).revertedWith('PublicMintingDisabled(0)');
@@ -162,12 +162,12 @@ describe('Test', function() {
     ];
 
     const balance = await ethers.provider.getBalance(soulboundContract.address);
-    await expect(soulboundContract['mint(address,uint256[])'](
+    await expect(soulboundContract['mint(address,uint248[])'](
       accounts[3].address,
       [0, 2],
       { value: 2 * tiers[1].publicPrice.toNumber() - 1 },
     )).revertedWith('InsufficientValue()');
-    await soulboundContract['mint(address,uint256[])'](
+    await soulboundContract['mint(address,uint248[])'](
       accounts[3].address,
       [0, 2],
       { value: 2 * tiers[1].publicPrice.toNumber() },
@@ -177,14 +177,14 @@ describe('Test', function() {
     const newBalance = await ethers.provider.getBalance(soulboundContract.address);
     expect(newBalance.sub(balance)).equal(2 * tiers[1].publicPrice.toNumber());
 
-    await expect(soulboundContract['mint(address,uint256[])'](
+    await expect(soulboundContract['mint(address,uint248[])'](
       accounts[4].address,
       [tiers[0].maxOwnable.add(1)]
     )).revertedWith('ExceedsMaxOwnership(0)');
   });
 
   it('Test burning', async () => {
-    await soulboundContract['mint(address,uint256[])'](
+    await soulboundContract['mint(address,uint248[])'](
       accounts[4].address,
       [2],
       { value: tiers[0].publicPrice.toNumber() * 2 }
