@@ -28,7 +28,7 @@ contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpg
     mapping(address /*owner*/ => mapping(uint8 /*tier*/ => uint248 /*numOwned*/)) private _numOwned;
     bytes32 private _mintMerkleRoot;
     bytes32 private _numMerkleRoots;
-    mapping(address /*owner*/ => mapping(uint8 /*tier*/ => uint248 /*numOwned*/))[] private _merkleMintUses;
+    mapping(address /*owner*/ => mapping(uint8 /*tier*/ => uint248 /*numMinted*/))[] private _merkleMintUses;
 
     function initialize(string memory name, string memory symbol, Tier[] memory tiers) external initializer {
         OwnableUpgradeable.__Ownable_init();
