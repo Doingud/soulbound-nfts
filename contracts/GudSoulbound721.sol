@@ -1,24 +1,23 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.16;
+pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/utils/Base64.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/MerkleProofUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./IGudSoulbound721.sol";
 import "./Soulbound721Upgradable.sol";
-import "./OwnableUpgradable.sol";
 
-contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpgradable {
-    using ECDSA for bytes32;
+contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpgradeable {
+    using ECDSAUpgradeable for bytes32;
 
     error InvalidNumTiers();
     error InvalidMaxOwned(uint256 tier);
     error InsufficientValue();
-    error PublicMintingDisabled(uint256 tier);
-    error ExceedsMaxOwnership(uint256 tier);
-    error ExceedsMaxMerkleMintUses(uint256 tier);
-    error ExceedsMaxSupply(uint256 tier);
+    error PublicMintingDisabled(uint8 tier);
+    error ExceedsMaxOwnership(uint8 tier);
+    error ExceedsMaxMerkleMintUses(uint8 tier);
+    error ExceedsMaxSupply(uint8 tier);
     error NotOwner();
     error IncorrectOwnerSignature();
     error IncorrectMerkleProof();
@@ -27,23 +26,23 @@ contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpg
     error NoSuchToken(uint256 tokenId);
 
     Tier[] private _tiers;
-    mapping(uint256 => uint256) _numMinted;
-    mapping(address /*owner*/ => mapping(uint256 /*tier*/ => uint256 /*numOwned*/)) private _numOwned;
+    mapping(uint8 /*tier*/ => uint248 /*numMinted*/) _numMinted;
+    mapping(address /*owner*/ => mapping(uint8 /*tier*/ => uint248 /*numOwned*/)) private _numOwned;
     bytes32 private _mintMerkleRoot;
     bytes32 private _numMerkleRoots;
-    mapping(address /*owner*/ => mapping(uint256 /*tier*/ => uint256 /*numOwned*/))[] private _merkleMintUses;
+    mapping(address /*owner*/ => mapping(uint8 /*tier*/ => uint248 /*numMinted*/))[] private _merkleMintUses;
 
-    function initialize(string memory name, string memory symbol, Tier[] memory tiers) external override {
-        OwnableUpgradable.initialize();
-        Soulbound721Upgradable.initialize(name, symbol);
+    function initialize(string memory name, string memory symbol, Tier[] memory tiers) external initializer {
+        OwnableUpgradeable.__Ownable_init();
+        Soulbound721Upgradable.__ERC721_init(name, symbol);
         setTiers(tiers);
     }
 
-    function mint(address to, uint256[] calldata numMints) external payable {
+    function mint(address to, uint248[] calldata numMints) external payable {
         uint256 totalPrice = 0;
         for (uint i = 0; i < numMints.length; ++i) {
             if (numMints[i] != 0 && _tiers[i].publicPrice == type(uint256).max) {
-                revert PublicMintingDisabled(i);
+                revert PublicMintingDisabled(uint8(i));
             }
             totalPrice += _tiers[i].publicPrice * numMints[i];
         }
@@ -51,25 +50,25 @@ contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpg
     }
 
     function mint(
-        uint256[] calldata numMints,
+        uint248[] calldata numMints,
         MerkleMint calldata merkleMint,
         bytes32[] calldata merkleProof
     ) external payable {
-        if (MerkleProof.verify(
+        if (MerkleProofUpgradeable.verify(
             merkleProof,
             _mintMerkleRoot,
             keccak256(abi.encode(merkleMint.to, merkleMint.tierMaxMints,merkleMint.tierPrices))
         ) == false) {
             revert IncorrectMerkleProof();
         }
-        mapping(uint256 => uint256) storage merkleMintUses = _merkleMintUses[_merkleMintUses.length - 1][merkleMint.to];
+        mapping(uint8 => uint248) storage merkleMintUses = _merkleMintUses[_merkleMintUses.length - 1][merkleMint.to];
         uint256 totalPrice = 0;
 
         for (uint i = 0; i < numMints.length; ++i) {
-            if (merkleMintUses[i] + numMints[i] > merkleMint.tierMaxMints[i]) {
-                revert ExceedsMaxMerkleMintUses(i);
+            if (merkleMintUses[uint8(i)] + numMints[i] > merkleMint.tierMaxMints[i]) {
+                revert ExceedsMaxMerkleMintUses(uint8(i));
             }
-            merkleMintUses[i] += numMints[i];
+            merkleMintUses[uint8(i)] += numMints[i];
 
             totalPrice += merkleMint.tierPrices[i] * numMints[i];
         }
@@ -121,15 +120,20 @@ contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpg
         return _tiers;
     }
 
-    function numMinted(uint256 tier) external view returns (uint256) {
+    function numMinted(uint8 tier) external view returns (uint248) {
         return _numMinted[tier];
     }
-
     function numOwned(address account, uint256 tier) external view returns (uint256) {
         return _numOwned[account][tier];
     }
 
-    function tokenURI(uint256 tokenId) public view virtual override(Soulbound721Upgradable, IERC721Metadata) returns (string memory) {
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        virtual
+        override(Soulbound721Upgradable, IERC721MetadataUpgradeable)
+        returns (string memory)
+    {
         if (ownerOf(tokenId) == address(0)) {
             revert NoSuchToken(tokenId);
         }
@@ -139,27 +143,33 @@ contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpg
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId) public view override(Soulbound721Upgradable, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(Soulbound721Upgradable, IERC165Upgradeable)
+        returns (bool)
+    {
             return interfaceId == type(IGudSoulbound721).interfaceId || super.supportsInterface(interfaceId);
     }
 
-    function _mint(address to, uint256[] calldata numMints, uint256 totalPrice) private {
+    function _mint(address to, uint248[] calldata numMints, uint256 totalPrice) private {
         for (uint tierNum = 0; tierNum < numMints.length; ++tierNum) {
             Tier storage tier = _tiers[tierNum];
 
-            if (_numOwned[to][tierNum] + numMints[tierNum] > tier.maxOwnable) {
-                revert ExceedsMaxOwnership(tierNum);
+            if (_numOwned[to][uint8(tierNum)] + numMints[tierNum] > tier.maxOwnable) {
+                revert ExceedsMaxOwnership(uint8(tierNum));
             }
-            if (_numMinted[tierNum] + numMints[tierNum] > tier.maxSupply) {
-                revert ExceedsMaxSupply(tierNum);
+            if (_numMinted[uint8(tierNum)] + numMints[tierNum] > tier.maxSupply) {
+                revert ExceedsMaxSupply(uint8(tierNum));
             }
 
-            uint256 tokenId = (tierNum << 248) + _numMinted[tierNum];
+
+            uint256 tokenId = (tierNum << 248) + _numMinted[uint8(tierNum)];
             for (uint j = 0; j < numMints[tierNum]; ++j) {
                 _safeMint(to, ++tokenId);
             }
-            _numOwned[to][tierNum] += numMints[tierNum];
-            _numMinted[tierNum] += numMints[tierNum];
+            _numOwned[to][uint8(tierNum)] += numMints[uint8(tierNum)];
+            _numMinted[uint8(tierNum)] += numMints[uint8(tierNum)];
         }
 
         if (totalPrice > msg.value) {

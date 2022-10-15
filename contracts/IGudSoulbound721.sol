@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/interfaces/IERC721Metadata.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/IERC721MetadataUpgradeable.sol";
 
-interface IGudSoulbound721 is IERC721, IERC721Metadata {
-    event MerkleMintUsed(MerkleMint merkleMint, uint256[] numMints);
+interface IGudSoulbound721 is IERC721MetadataUpgradeable {
+    event MerkleMintUsed(MerkleMint merkleMint, uint248[] numMints);
     event TokenBurned(uint256 tokenId);
     event TiersSet(Tier[] tiers);
     event EtherWithdrawn(address payable to, uint256 amount);
@@ -22,8 +22,8 @@ interface IGudSoulbound721 is IERC721, IERC721Metadata {
     */
     struct Tier {
         uint256 publicPrice;
-        uint256 maxSupply;
         string uri;
+        uint248 maxSupply;
         uint248 maxOwnable;
     }
 
@@ -36,7 +36,7 @@ interface IGudSoulbound721 is IERC721, IERC721Metadata {
     */
     struct MerkleMint {
         address to;
-        uint256[] tierMaxMints;
+        uint248[] tierMaxMints;
         uint256[] tierPrices;
     }
 
@@ -48,7 +48,7 @@ interface IGudSoulbound721 is IERC721, IERC721Metadata {
      * @param to token recipient address
      * @param numMints number of tokens of each tier to mint
     */
-    function mint(address to, uint256[] calldata numMints) external payable;
+    function mint(address to, uint248[] calldata numMints) external payable;
 
     /**
     * @dev private minting function
@@ -58,7 +58,7 @@ interface IGudSoulbound721 is IERC721, IERC721Metadata {
     * @param merkleProof Merkle proof for the leaf
     */
     function mint(
-        uint256[] calldata numMints,
+        uint248[] calldata numMints,
         MerkleMint calldata merkleMint,
         bytes32[] calldata merkleProof
     ) external payable;
@@ -95,5 +95,5 @@ interface IGudSoulbound721 is IERC721, IERC721Metadata {
     /**
     * @return number of tokens minted in `tier`
     */
-    function numMinted(uint256 tier) external view returns (uint256);
+    function numMinted(uint8 tier) external view returns (uint248);
 }

@@ -1,6 +1,6 @@
 const { MerkleTree } = require("merkletreejs");
 // const keccak256 = require("keccak256");
-const { ethers } = require("hardhat");
+const { ethers } = require("ethers");
 const { default: axios } = require("axios");
 const { parseEther } = require("ethers/lib/utils");
 const keccak256 = ethers.utils.keccak256;
@@ -66,6 +66,8 @@ const merkleRootHash = async () => {
     )
   );
 
+  console.log("claiming address: ", claimingAddress);
+
   // `getHexProof` returns the neighbour leaf and all parent nodes hashes that will
   // be required to derive the Merkle Trees root hash.
   const hexProof = merkleTree.getHexProof(claimingAddress);
@@ -121,7 +123,7 @@ const setMintMerkleRoot = async (rootHash) => {
 const run = async () => {
   await fetchWhitelists();
   const rootHash = await merkleRootHash();
-  await setMintMerkleRoot(rootHash);
+  // await setMintMerkleRoot(rootHash);
 };
 
 run();
