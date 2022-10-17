@@ -123,7 +123,7 @@ contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpg
     function numMinted(uint8 tier) external view returns (uint248) {
         return _numMinted[tier];
     }
-    function numOwned(address account, uint256 tier) external view returns (uint256) {
+    function numOwned(address account, uint8 tier) external view returns (uint256) {
         return _numOwned[account][tier];
     }
 

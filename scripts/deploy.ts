@@ -17,7 +17,7 @@ async function main() {
   // We get the contract to deploy
   const gas = ethers.provider.getGasPrice();
   const soulboundContract = await ethers.getContractFactory("GudSoulbound721");
-  const name = "GudSoulsv2",
+  const name = "GudSoulsv3",
     symbol = "GDS",
     tiers = [
       {
@@ -27,19 +27,19 @@ async function main() {
         maxOwnable: "3",
       },
       {
-        publicPrice: parseEther("0.004"),
+        publicPrice: parseEther("0.003"),
         maxSupply: "500",
         uri: "https://gateway.pinata.cloud/ipfs/QmQz8Jh4EPceVb1uarUNCYv7WxR9Zw1eaATjDkF1wwaJJN",
         maxOwnable: "3",
       },
       {
-        publicPrice: parseEther("0.004"),
+        publicPrice: parseEther("0.002"),
         maxSupply: "500",
         uri: "https://gateway.pinata.cloud/ipfs/QmY8BaEx8xAiaHft6x8SHqHL4cYw2dKYWN22kpSX7oVDbc",
         maxOwnable: "3",
       },
       {
-        publicPrice: parseEther("0.004"),
+        publicPrice: parseEther("0.001"),
         maxSupply: "500",
         uri: "https://gateway.pinata.cloud/ipfs/QmZV53QZMAuyomT41LMPz5cWjpUn65VYtCtSER9chfVXmk",
         maxOwnable: "3",

@@ -1,11 +1,11 @@
 const { MerkleTree } = require("merkletreejs");
 // const keccak256 = require("keccak256");
-const { ethers } = require("ethers");
+const { ethers } = require("hardhat");
 const { default: axios } = require("axios");
 const { parseEther } = require("ethers/lib/utils");
 const keccak256 = ethers.utils.keccak256;
 
-const contractAddress = "0xA9297249eB33aE1E3A3925C6d118e917e5E47Eef"; //goerli
+const contractAddress = "0x9501eE6a2c9EcBa60429995ae9FE1813587ebFaf";
 const apiBaseUrl = "https://soulbound.kraznikunderverse.com";
 
 const tierMaxMints = [3, 3, 3, 3];
@@ -123,7 +123,7 @@ const setMintMerkleRoot = async (rootHash) => {
 const run = async () => {
   await fetchWhitelists();
   const rootHash = await merkleRootHash();
-  // await setMintMerkleRoot(rootHash);
+  await setMintMerkleRoot(rootHash);
 };
 
 run();
