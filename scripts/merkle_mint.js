@@ -5,7 +5,7 @@ const { default: axios } = require("axios");
 const { parseEther } = require("ethers/lib/utils");
 const keccak256 = ethers.utils.keccak256;
 
-const contractAddress = "0x9501eE6a2c9EcBa60429995ae9FE1813587ebFaf";
+const contractAddress = "0x8Ac40880102B378F3F14386BC06d25E4c4D321c7"; //"0x9501eE6a2c9EcBa60429995ae9FE1813587ebFaf";
 const apiBaseUrl = "https://soulbound.kraznikunderverse.com";
 
 const tierMaxMints = [3, 3, 3, 3];
@@ -81,23 +81,23 @@ const merkleRootHash = async () => {
     merkleTree.verify(hexProof, claimingAddress, rootHash)
   );
 
-  return rootHash;
+  return { rootHash, hexProof };
 };
 
-const setMintMerkleRoot = async (rootHash) => {
+const setMintMerkleRoot = async (rootHash, hexProof) => {
   const soulbound = await ethers.getContractAt("GudSoulbound721", contractAddress);
-  const set_tx = await soulbound.setMintMerkleRoot(rootHash);
-  await set_tx.wait();
-  console.log("setMintMerkleRoot txn hash: ", set_tx.hash);
+  // const set_tx = await soulbound.setMintMerkleRoot(rootHash);
+  // await set_tx.wait();
+  // console.log("setMintMerkleRoot txn hash: ", set_tx.hash);
 
-  return;
+  // return;
 
   const to = "0x5c0085E600398247a37de389931CCea8EdD3ba67",
-    numMints = [1, 0, 2, 1];
+    numMints = [1, 0, 0, 0];
 
   console.log("numMints in this txn: ", numMints);
 
-  const totalPrice = "1000000000";
+  const totalPrice = tierPrices[0];
 
   const merkleMint = {
     to: "0x5c0085E600398247a37de389931CCea8EdD3ba67",
@@ -109,7 +109,7 @@ const setMintMerkleRoot = async (rootHash) => {
   const merkleProof = hexProof;
 
   console.log("merkle proof to pass to contract: ", merkleProof);
-  const tx = await soulbound["mint(uint256[],(address,uint256[],uint256[]),bytes32[])"](
+  const tx = await soulbound["mint(uint248[],(address,uint248[],uint256[]),bytes32[])"](
     numMints,
     merkleMint,
     merkleProof,
@@ -122,8 +122,8 @@ const setMintMerkleRoot = async (rootHash) => {
 
 const run = async () => {
   await fetchWhitelists();
-  const rootHash = await merkleRootHash();
-  await setMintMerkleRoot(rootHash);
+  const { rootHash, hexProof } = await merkleRootHash();
+  await setMintMerkleRoot(rootHash, hexProof);
 };
 
 run();
