@@ -22,7 +22,8 @@ interface IGudSoulbound721 is IERC721MetadataUpgradeable {
     */
     struct Tier {
         uint256 publicPrice;
-        string uri;
+        string cid;
+        bool idInUri;
         uint248 maxSupply;
         uint248 maxOwnable;
     }
@@ -97,5 +98,8 @@ interface IGudSoulbound721 is IERC721MetadataUpgradeable {
     */
     function numMinted(uint8 tier) external view returns (uint248);
 
+    /**
+    * @return number of tokens owned by `owner` in `tier`
+    */
     function numOwned(address owner, uint8 tier) external view returns (uint248);
 }

@@ -5,6 +5,7 @@ pragma solidity 0.8.17;
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/MerkleProofUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 import "./IGudSoulbound721.sol";
 import "./Soulbound721Upgradable.sol";
 
@@ -124,19 +125,6 @@ contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpg
         return _numOwned[owner][tier];
     }
 
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        virtual
-        override(Soulbound721Upgradable, IERC721MetadataUpgradeable)
-        returns (string memory)
-    {
-        if (ownerOf(tokenId) == address(0)) {
-            revert NoSuchToken(tokenId);
-        }
-        return _tiers[tokenId >> 248].uri;
-    }
-
     /**
      * @dev See {IERC165-supportsInterface}.
      */
@@ -147,6 +135,33 @@ contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpg
         returns (bool)
     {
             return interfaceId == type(IGudSoulbound721).interfaceId || super.supportsInterface(interfaceId);
+    }
+
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        override(IERC721MetadataUpgradeable, Soulbound721Upgradable)
+        returns (string memory)
+    {
+        if (ownerOf(tokenId) == address(0)) {
+            revert NoSuchToken(tokenId);
+        }
+        Tier storage tier = _tiers[tokenId >> 248];
+        if (tier.idInUri) {
+            return string.concat(
+                "ipfs://",
+                tier.cid,
+                "/",
+                Strings.toString(tokenId & 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff),
+                ".json"
+            );
+        } else {
+            return string.concat(
+                "ipfs://",
+                tier.cid,
+                "/metadata.json"
+            );
+        }
     }
 
     function _mint(address to, uint248[] calldata numMints, uint256 totalPrice) private {

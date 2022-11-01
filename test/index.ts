@@ -11,9 +11,10 @@ describe('Test', function() {
   let soulBoundContract: GudSoulbound721;
   let tiers: {
     publicPrice: BigNumber;
+    cid: string;
+    idInUri: boolean;
     maxOwnable: BigNumber;
     maxSupply: BigNumber;
-    uri: string;
   }[];
 
   before(async () => {
@@ -22,15 +23,17 @@ describe('Test', function() {
     tiers = [
       {
         publicPrice: ethers.constants.MaxUint256,
+        cid: '123abc',
+        idInUri: false,
         maxOwnable: BigNumber.from(2),
         maxSupply: BigNumber.from(1000),
-        uri: 'ipfs://1234',
       },
       {
         publicPrice: ethers.constants.MaxUint256,
+        cid: '456def',
+        idInUri: true,
         maxOwnable: BigNumber.from(4),
         maxSupply: BigNumber.from(1000),
-        uri: 'ipfs://4567',
       },
     ];
 
@@ -49,7 +52,7 @@ describe('Test', function() {
       expect(tiers[i].publicPrice).equal(solTiers[i].publicPrice);
       expect(tiers[i].maxOwnable).equal(solTiers[i].maxOwnable);
       expect(tiers[i].maxSupply).equal(solTiers[i].maxSupply);
-      expect(tiers[i].uri).equal(solTiers[i].uri);
+      expect(tiers[i].cid).equal(solTiers[i].cid);
     }
   });
 
@@ -210,6 +213,26 @@ describe('Test', function() {
     ).revertedWith('ERC721: invalid token ID" [ See: https://links.ethers.org/v5-errors-CALL_EXCEPTION ] (method="ownerOf(uint256)');
     expect(await soulBoundContract.ownerOf(secondToken)).equal(accounts[5].address);
     expect(afterMint.sub(await soulBoundContract.numOwned(accounts[5].address, 0))).eq(1);
+  });
+
+  it('Test URIs', async () => {
+    const tier0Id = 3;
+    const tier1Id = 2;
+    const badId = BigNumber.from(1).shl(248);
+
+    tiers[0].idInUri = false;
+    tiers[1].idInUri = true;
+    await soulBoundContract.setTiers(tiers);
+
+    const tier0IdUri = await soulBoundContract.tokenURI(BigNumber.from(0).shl(248).add(tier0Id));
+    const tier1IdUri = await soulBoundContract.tokenURI(BigNumber.from(1).shl(248).add(tier1Id));
+
+    expect(tier0IdUri).eq(`ipfs://${tiers[0].cid}/metadata.json`);
+    expect(tier1IdUri).eq(`ipfs://${tiers[1].cid}/${tier1Id}.json`);
+
+    await expect(soulBoundContract.tokenURI(BigNumber.from(0).shl(248).add(badId))).revertedWith(
+      'ERC721: invalid token ID" [ See: https://links.ethers.org/v5-errors-CALL_EXCEPTION ] (method="tokenURI(uint256)'
+    );
   });
 
   it('Test withdrawing ether', async () => {
