@@ -80,6 +80,7 @@ contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpg
             revert NotOwner();
         }
         _burn(tokenId);
+        _numOwned[msg.sender][uint8(tokenId >> 248)] -= 1;
         emit TokenBurned(tokenId);
     }
 
@@ -117,6 +118,10 @@ contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpg
 
     function numMinted(uint8 tier) external view returns (uint248) {
         return _numMinted[tier];
+    }
+
+    function numOwned(address owner, uint8 tier) external view returns (uint248) {
+        return _numOwned[owner][tier];
     }
 
     function tokenURI(uint256 tokenId)

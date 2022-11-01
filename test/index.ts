@@ -180,36 +180,42 @@ describe('Test', function() {
     await soulBoundContract['mint(address,uint248[])'](
       accounts[4].address,
       [tiers[0].maxOwnable],
-      { value: tiers[0].maxOwnable.mul(tiers[0].publicPrice) }
+      { value: tiers[0].maxOwnable.mul(tiers[0].publicPrice) },
     );
     await expect(soulBoundContract['mint(address,uint248[])'](
       accounts[4].address,
       [1],
-      { value: tiers[0].publicPrice }
+      { value: tiers[0].publicPrice },
     )).revertedWith('ExceedsMaxOwnership(0)');
   });
 
-   it('Test burning', async () => {
+  it('Test burning', async () => {
+    const numMints = 2;
+
+    const beforeMint = await soulBoundContract.numOwned(accounts[5].address, 0);
     await soulBoundContract['mint(address,uint248[])'](
       accounts[5].address,
-      [2],
-      { value: tiers[0].publicPrice.toNumber() * 2 }
+      [numMints],
+      { value: tiers[0].publicPrice.toNumber() * numMints },
     );
+    const afterMint = await soulBoundContract.numOwned(accounts[5].address, 0);
+    expect(afterMint.sub(beforeMint)).eq(numMints);
     const secondToken = await soulBoundContract.numMinted(0);
     expect(await soulBoundContract.ownerOf(secondToken.sub(1))).equal(accounts[5].address);
     expect(await soulBoundContract.ownerOf(secondToken)).equal(accounts[5].address);
 
     await soulBoundContract.connect(accounts[5]).burn(secondToken.sub(1));
     await expect(
-      soulBoundContract.ownerOf(secondToken.sub(1))
+      soulBoundContract.ownerOf(secondToken.sub(1)),
     ).revertedWith('ERC721: invalid token ID" [ See: https://links.ethers.org/v5-errors-CALL_EXCEPTION ] (method="ownerOf(uint256)');
     expect(await soulBoundContract.ownerOf(secondToken)).equal(accounts[5].address);
+    expect(afterMint.sub(await soulBoundContract.numOwned(accounts[5].address, 0))).eq(1);
   });
 
   it('Test withdrawing ether', async () => {
     const contractBalance = await ethers.provider.getBalance(soulBoundContract.address);
     await expect(
-      soulBoundContract.connect(accounts[1]).withdrawEther(accounts[1].address, contractBalance)
+      soulBoundContract.connect(accounts[1]).withdrawEther(accounts[1].address, contractBalance),
     ).revertedWith('Ownable: caller is not the owner');
 
     const recipientBalance = await accounts[1].getBalance();

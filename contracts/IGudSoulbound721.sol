@@ -96,4 +96,6 @@ interface IGudSoulbound721 is IERC721MetadataUpgradeable {
     * @return number of tokens minted in `tier`
     */
     function numMinted(uint8 tier) external view returns (uint248);
+
+    function numOwned(address owner, uint8 tier) external view returns (uint248);
 }
