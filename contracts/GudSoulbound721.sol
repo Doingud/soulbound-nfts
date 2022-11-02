@@ -148,19 +148,9 @@ contract GudSoulbound721 is IGudSoulbound721, Soulbound721Upgradable, OwnableUpg
         }
         Tier storage tier = _tiers[tokenId >> 248];
         if (tier.idInUri) {
-            return string.concat(
-                "ipfs://",
-                tier.cid,
-                "/",
-                Strings.toString(tokenId & 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff),
-                ".json"
-            );
+            return string.concat("ipfs://", tier.cid, "/", Strings.toString(uint248(tokenId)), ".json");
         } else {
-            return string.concat(
-                "ipfs://",
-                tier.cid,
-                "/metadata.json"
-            );
+            return string.concat("ipfs://", tier.cid, "/metadata.json");
         }
     }
 
