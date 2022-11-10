@@ -11,9 +11,10 @@ describe('Test', function() {
   let soulBoundContract: GudSoulbound721;
   let tiers: {
     publicPrice: BigNumber;
+    cid: string;
+    idInUri: boolean;
     maxOwnable: BigNumber;
     maxSupply: BigNumber;
-    uri: string;
   }[];
 
   before(async () => {
@@ -22,15 +23,17 @@ describe('Test', function() {
     tiers = [
       {
         publicPrice: ethers.constants.MaxUint256,
+        cid: '123abc',
+        idInUri: false,
         maxOwnable: BigNumber.from(2),
         maxSupply: BigNumber.from(1000),
-        uri: 'ipfs://1234',
       },
       {
         publicPrice: ethers.constants.MaxUint256,
+        cid: '456def',
+        idInUri: true,
         maxOwnable: BigNumber.from(4),
         maxSupply: BigNumber.from(1000),
-        uri: 'ipfs://4567',
       },
     ];
 
@@ -49,7 +52,7 @@ describe('Test', function() {
       expect(tiers[i].publicPrice).equal(solTiers[i].publicPrice);
       expect(tiers[i].maxOwnable).equal(solTiers[i].maxOwnable);
       expect(tiers[i].maxSupply).equal(solTiers[i].maxSupply);
-      expect(tiers[i].uri).equal(solTiers[i].uri);
+      expect(tiers[i].cid).equal(solTiers[i].cid);
     }
   });
 
@@ -79,20 +82,20 @@ describe('Test', function() {
     let balance: BigNumber;
     let newBalance;
 
-    await expect(soulBoundContract['mint(uint256[],(address,uint256[],uint256[]),bytes32[])'](
+    await expect(soulBoundContract['mint(uint248[],(address,uint248[],uint256[]),bytes32[])'](
       [mints[0].tierMaxMints[0] + 1, 1],
       mints[0],
       merkleTree.getHexProof(leaves[0]),
     )).revertedWith('ExceedsMaxMerkleMintUses(0)');
 
     balance = await ethers.provider.getBalance(soulBoundContract.address);
-    await soulBoundContract['mint(uint256[],(address,uint256[],uint256[]),bytes32[])'](
+    await soulBoundContract['mint(uint248[],(address,uint248[],uint256[]),bytes32[])'](
       [2, 1],
       mints[0],
       merkleTree.getHexProof(leaves[0]),
       { value: 2 * tierPrices1[0] + tierPrices1[1] },
     );
-    await expect(soulBoundContract['mint(uint256[],(address,uint256[],uint256[]),bytes32[])'](
+    await expect(soulBoundContract['mint(uint248[],(address,uint248[],uint256[]),bytes32[])'](
       [2, 1],
       mints[0],
       merkleTree.getHexProof(leaves[0]),
@@ -111,26 +114,26 @@ describe('Test', function() {
     expect(newBalance.sub(balance)).equal(2 * tierPrices1[0] + tierPrices1[1]);
     balance = newBalance;
 
-    await soulBoundContract['mint(uint256[],(address,uint256[],uint256[]),bytes32[])'](
+    await soulBoundContract['mint(uint248[],(address,uint248[],uint256[]),bytes32[])'](
       [0, 1],
       mints[1],
       merkleTree.getHexProof(leaves[1]),
       { value: tierPrices2[1] },
     );
-    await soulBoundContract['mint(uint256[],(address,uint256[],uint256[]),bytes32[])'](
+    await soulBoundContract['mint(uint248[],(address,uint248[],uint256[]),bytes32[])'](
       [0, 1],
       mints[1],
       merkleTree.getHexProof(leaves[1]),
       { value: tierPrices2[1] },
     );
-    await expect(soulBoundContract['mint(uint256[],(address,uint256[],uint256[]),bytes32[])'](
+    await expect(soulBoundContract['mint(uint248[],(address,uint248[],uint256[]),bytes32[])'](
       [0, 1],
       mints[1],
       merkleTree.getHexProof(leaves[1]),
       { value: tierPrices2[1] },
     )).revertedWith('ExceedsMaxMerkleMintUses(1)');
 
-    await expect(soulBoundContract['mint(uint256[],(address,uint256[],uint256[]),bytes32[])'](
+    await expect(soulBoundContract['mint(uint248[],(address,uint248[],uint256[]),bytes32[])'](
       [1, 0],
       mints[1],
       merkleTree.getHexProof(leaves[1]),
@@ -147,7 +150,7 @@ describe('Test', function() {
   });
 
   it('Test public minting', async () => {
-    await expect(soulBoundContract['mint(address,uint256[])'](
+    await expect(soulBoundContract['mint(address,uint248[])'](
       accounts[3].address,
       [1],
     )).revertedWith('PublicMintingDisabled(0)');
@@ -162,12 +165,12 @@ describe('Test', function() {
     ];
 
     const balance = await ethers.provider.getBalance(soulBoundContract.address);
-    await expect(soulBoundContract['mint(address,uint256[])'](
+    await expect(soulBoundContract['mint(address,uint248[])'](
       accounts[3].address,
-      [0, 2],
+      [0, tiers[1].maxOwnable],
       { value: 2 * tiers[1].publicPrice.toNumber() - 1 },
     )).revertedWith('InsufficientValue()');
-    await soulBoundContract['mint(address,uint256[])'](
+    await soulBoundContract['mint(address,uint248[])'](
       accounts[3].address,
       [0, 2],
       { value: 2 * tiers[1].publicPrice.toNumber() },
@@ -177,41 +180,67 @@ describe('Test', function() {
     const newBalance = await ethers.provider.getBalance(soulBoundContract.address);
     expect(newBalance.sub(balance)).equal(2 * tiers[1].publicPrice.toNumber());
 
-    await soulBoundContract['mint(address,uint256[])'](
+    await soulBoundContract['mint(address,uint248[])'](
       accounts[4].address,
       [tiers[0].maxOwnable],
-      { value: tiers[0].maxOwnable.mul(tiers[0].publicPrice) }
+      { value: tiers[0].maxOwnable.mul(tiers[0].publicPrice) },
     );
-    await expect(soulBoundContract['mint(address,uint256[])'](
+    await expect(soulBoundContract['mint(address,uint248[])'](
       accounts[4].address,
       [1],
-      { value: tiers[0].publicPrice }
+      { value: tiers[0].publicPrice },
     )).revertedWith('ExceedsMaxOwnership(0)');
   });
 
   it('Test burning', async () => {
-    await soulBoundContract['mint(address,uint256[])'](
+    const numMints = 2;
+
+    const beforeMint = await soulBoundContract.numOwned(accounts[5].address, 0);
+    await soulBoundContract['mint(address,uint248[])'](
       accounts[5].address,
-      [2],
-      { value: tiers[0].publicPrice.toNumber() * 2 }
+      [numMints],
+      { value: tiers[0].publicPrice.toNumber() * numMints },
     );
+    const afterMint = await soulBoundContract.numOwned(accounts[5].address, 0);
+    expect(afterMint.sub(beforeMint)).eq(numMints);
     const secondToken = await soulBoundContract.numMinted(0);
     expect(await soulBoundContract.ownerOf(secondToken.sub(1))).equal(accounts[5].address);
     expect(await soulBoundContract.ownerOf(secondToken)).equal(accounts[5].address);
 
     await soulBoundContract.connect(accounts[5]).burn(secondToken.sub(1));
     await expect(
-      soulBoundContract.ownerOf(secondToken.sub(1))
+      soulBoundContract.ownerOf(secondToken.sub(1)),
     ).revertedWith('ERC721: invalid token ID" [ See: https://links.ethers.org/v5-errors-CALL_EXCEPTION ] (method="ownerOf(uint256)');
     expect(await soulBoundContract.ownerOf(secondToken)).equal(accounts[5].address);
+    expect(afterMint.sub(await soulBoundContract.numOwned(accounts[5].address, 0))).eq(1);
+  });
+
+  it('Test URIs', async () => {
+    const tier0Id = 3;
+    const tier1Id = 2;
+    const badId = BigNumber.from(1).shl(248);
+
+    tiers[0].idInUri = false;
+    tiers[1].idInUri = true;
+    await soulBoundContract.setTiers(tiers);
+
+    const tier0IdUri = await soulBoundContract.tokenURI(BigNumber.from(0).shl(248).add(tier0Id));
+    const tier1IdUri = await soulBoundContract.tokenURI(BigNumber.from(1).shl(248).add(tier1Id));
+
+    expect(tier0IdUri).eq(`ipfs://${tiers[0].cid}/metadata.json`);
+    expect(tier1IdUri).eq(`ipfs://${tiers[1].cid}/${tier1Id}.json`);
+
+    await expect(soulBoundContract.tokenURI(BigNumber.from(0).shl(248).add(badId))).revertedWith(
+      'ERC721: invalid token ID" [ See: https://links.ethers.org/v5-errors-CALL_EXCEPTION ] (method="tokenURI(uint256)'
+    );
   });
 
   it('Test withdrawing ether', async () => {
     const contractBalance = await ethers.provider.getBalance(soulBoundContract.address);
     await expect(
-      soulBoundContract.connect(accounts[1]).withdrawEther(accounts[1].address, contractBalance)
+      soulBoundContract.connect(accounts[1]).withdrawEther(accounts[1].address, contractBalance),
     ).revertedWith('Ownable: caller is not the owner');
-    
+
     const recipientBalance = await accounts[1].getBalance();
     await soulBoundContract.withdrawEther(accounts[1].address, contractBalance);
     const newContractBalance = await ethers.provider.getBalance(soulBoundContract.address);
