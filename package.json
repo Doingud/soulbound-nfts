@@ -41,6 +41,7 @@
     "test": "hardhat test"
   },
   "dependencies": {
+    "@openzeppelin/contracts-upgradeable": "^4.8.0",
     "merkletreejs": "^0.2.32"
   }
 }

@@ -22,25 +22,29 @@ async function main() {
         publicPrice: 2000000000000,
         maxOwnable: 5,
         maxSupply: 1000,
-        uri: 'ipfs://1234',
+        cid: '123abc',
+        idInUri: false,
       },
       {
         publicPrice: 3000000000000,
         maxOwnable: 3,
         maxSupply: 1000,
-        uri: 'ipfs://1234',
+        cid: '123abc',
+        idInUri: true,
       },
       {
         publicPrice: 1000000000000,
         maxOwnable: 2,
         maxSupply: 1000,
-        uri: 'ipfs://1234',
+        cid: '123abc',
+        idInUri: false,
       },
       {
         publicPrice: 4000000000000,
         maxOwnable: 7,
         maxSupply: 1000,
-        uri: 'ipfs://1234',
+        cid: '123abc',
+        idInUri: true,
       },
     ];
   const soulbound = await upgrades.deployProxy(
@@ -50,7 +54,8 @@ async function main() {
 
   await soulbound.deployed();
 
-  console.log('Soulbound NFT deployed to:', soulbound.address);
+  console.log(`Soulbound NFT deployed to:  ${soulbound.address}`);
+  console.log(`Implementation deployed to: ${await upgrades.erc1967.getImplementationAddress(soulbound.address)}`);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

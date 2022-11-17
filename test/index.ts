@@ -192,6 +192,33 @@ describe('Test', function() {
     )).revertedWith('ExceedsMaxOwnership(0)');
   });
 
+  it('Test 0 price minting', async () => {
+    const buyer = accounts[6];
+
+    tiers[0].publicPrice = BigNumber.from(0);
+    tiers[0].maxOwnable = BigNumber.from(10000);
+    tiers[1].publicPrice = BigNumber.from(0);
+    tiers[1].maxOwnable = BigNumber.from(10000);
+    await soulBoundContract.setTiers(tiers);
+
+    const lastTokenIds = [
+      await soulBoundContract.numMinted(0),
+      BigNumber.from(1).shl(248).add(await soulBoundContract.numMinted(1)),
+    ];
+
+    await soulBoundContract['mint(address,uint248[])'](
+      buyer.address,
+      [1, 0]
+    );
+    expect(await soulBoundContract.ownerOf(lastTokenIds[0].add(1))).equal(buyer.address);
+
+    await soulBoundContract['mint(address,uint248[])'](
+      buyer.address,
+      [0, 1]
+    );
+    expect(await soulBoundContract.ownerOf(lastTokenIds[1].add(1))).equal(buyer.address);
+  });
+
   it('Test burning', async () => {
     const numMints = 2;
 
